@@ -1,0 +1,90 @@
+diff --git a/config/baseimage/Dockerfile b/config/baseimage/Dockerfile
+index afe69c3..2ae76e2 100644
+--- a/config/baseimage/Dockerfile
++++ b/config/baseimage/Dockerfile
+@@ -3,7 +3,7 @@
+ #
+ # SPDX-License-Identifier: Apache-2.0
+ #
+-FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
++FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u272-b10
+ COPY scripts /tmp/scripts
+ RUN cd /tmp/scripts && \
+     common/packages.sh && \
+diff --git a/config/baseos/Dockerfile b/config/baseos/Dockerfile
+index a8b0073..11ab1c1 100644
+--- a/config/baseos/Dockerfile
++++ b/config/baseos/Dockerfile
+@@ -3,7 +3,7 @@
+ #
+ # SPDX-License-Identifier: Apache-2.0
+ #
+-FROM debian:buster-20190910-slim
++FROM arm64v8/debian:buster
+ COPY scripts /tmp/scripts
+ RUN cd /tmp/scripts && \
+     common/init.sh && \
+diff --git a/images/kafka/Dockerfile b/images/kafka/Dockerfile
+index b441321..583540f 100644
+--- a/images/kafka/Dockerfile
++++ b/images/kafka/Dockerfile
+@@ -3,7 +3,7 @@
+ #
+ # SPDX-License-Identifier: Apache-2.0
+ #
+-FROM debian:buster-20190910-slim as download
++FROM arm64v8/debian:buster as download
+ RUN apt-get update \
+     && apt-get install -y curl \
+     tar \
+@@ -20,7 +20,7 @@ RUN echo "${KAFKA_DOWNLOAD_SHA1}  kafka.tgz" | sha1sum -c - \
+     && tar xfz kafka.tgz -C /opt/kafka --strip-components=1 \
+     && rm -f kafka.tgz;
+ 
+-FROM adoptopenjdk:8u222-b10-jre-openj9-0.15.1
++FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u272-b10
+ COPY --from=download /opt/kafka /opt/kafka
+ ADD ./kafka-run-class.sh /opt/kafka/bin/kafka-run-class.sh
+ ADD ./docker-entrypoint.sh /docker-entrypoint.sh
+diff --git a/scripts/common/setup.sh b/scripts/common/setup.sh
+index f77a10a..6dad1b6 100755
+--- a/scripts/common/setup.sh
++++ b/scripts/common/setup.sh
+@@ -30,7 +30,7 @@ export GOROOT="/opt/go"
+ # Install Golang
+ # ----------------------------------------------------------------
+ mkdir -p $GOPATH
+-ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|'`
++ARCH=`uname -m | sed 's|i686|x86|' | sed 's|x86_64|x64|' | sed 's|aarch64|arm64|'`
+ BINTARGETS="x86_64 ppc64le s390x"
+ GO_VER=1.12.12
+ 
+@@ -44,16 +44,16 @@ if echo $BINTARGETS | grep -q `uname -m`; then
+ # Otherwise, build Golang from source
+ else
+    # Install Golang 1.6 binary as a bootstrap to compile the Golang GO_VER source
+-   apt-get -y install golang-1.6
++   apt-get -y install golang
+ 
+    cd /tmp
+    wget --quiet --no-check-certificate https://storage.googleapis.com/golang/go${GO_VER}.src.tar.gz
+    tar -xzf go${GO_VER}.src.tar.gz -C /opt
+ 
+    cd $GOROOT/src
+-   export GOROOT_BOOTSTRAP="/usr/lib/go-1.6"
++   export GOROOT_BOOTSTRAP="/usr/lib/go"
+    ./make.bash
+-   apt-get -y remove golang-1.6
++   apt-get -y remove golang
+ fi
+ 
+ PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+@@ -70,7 +70,7 @@ EOF
+ NODE_VER=8.16.1
+ NPM_VER=6.11.3
+ 
+-ARCH=`uname -m | sed 's|i686|x86|' | sed 's|x86_64|x64|'`
++ARCH=`uname -m | sed 's|i686|x86|' | sed 's|x86_64|x64|' | sed 's|aarch64|arm64|'`
+ NODE_PKG=node-v$NODE_VER-linux-$ARCH.tar.gz
+ SRC_PATH=/tmp/$NODE_PKG
+ 
