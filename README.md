@@ -11,7 +11,7 @@ Used repositories:
 
 ## Scripts description
 
-These scripts are supposed to work with Ubuntu 20.04.1 LTS 64-bit edition (Desktop or Server, it makes no difference) and Zsh shell (not Bash), and the above-mentioned versions of fabric repositories. Feel free to change it for testing with other versions.
+These scripts are supposed to work with Ubuntu 20.04.1 LTS 64-bit edition (Desktop or Server, it makes no difference), Zsh shell and the above-mentioned versions of fabric repositories. Feel free to change it for testing with other versions.
 
 1. prerequisites.sh:
     - Upgrades the system
